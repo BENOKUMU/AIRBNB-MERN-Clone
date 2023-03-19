@@ -4,10 +4,13 @@ const { default: mongoose } = require('mongoose');
 const UserModel = require('./models/User');
 const User = require('./models/User')
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+
 require('dotenv').config();
 const app = express();
 
 const bcryptSalt = bcrypt.genSaltSync(10)
+const jwtSecret = 'thequickbrownfoxjumpedoverthelazydogs';
 
 app.use(express.json())
 
@@ -45,7 +48,11 @@ app.post('/login', async (req, res) => {
     if (userDoc) {
         const passOk = bcrypt.compareSync(password, userDoc.password);
         if (passOk) {
-            res.json('pass ok');
+            jwt.sign({email:userDoc.email, id:userDoc._id}, jwtSecret, {}, (err, token) => {
+              if (err) throw err;
+              res.cookie("token", token).json("pass ok");
+            })
+            
         } else {
             res.json('pass not ok');
         }
