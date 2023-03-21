@@ -5,6 +5,7 @@ const UserModel = require('./models/User');
 const User = require('./models/User')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 
 require('dotenv').config();
 const app = express();
@@ -14,16 +15,22 @@ const jwtSecret = 'thequickbrownfoxjumpedoverthelazydogs';
 
 app.use(express.json())
 
-app.use(cors({
-    credentials: true,
-    origin: 'http://localhost:5173'
-}))
+app.use(cookieParser())
 
-mongoose.connect(process.env.MONGO_URL);
+app.use(
+  cors({
+    credentials: true,
+    origin: ["http://127.0.0.1:5173", "http://localhost:5173"],
+  })
+);
+
+
 // console.log(process.env.MONGO_URL);
 
-app.get('/test', (req, res) => {
-    res.json('test ok');
+app.get('/test', (_req, res) => {
+  mongoose.connect(process.env.MONGO_URL);
+  res.json('test ok');
+  console.log('database connected');
 });
 
 app.post("/register", async (req, res) => {
@@ -48,7 +55,11 @@ app.post('/login', async (req, res) => {
     if (userDoc) {
         const passOk = bcrypt.compareSync(password, userDoc.password);
         if (passOk) {
-            jwt.sign({email:userDoc.email, id:userDoc._id}, jwtSecret, {}, (err, token) => {
+            jwt.sign({
+              email:userDoc.email, 
+              id:userDoc._id, 
+              name:userDoc.name
+            }, jwtSecret, {}, (err, token) => {
               if (err) throw err;
               res.cookie("token", token).json(userDoc);
             })
@@ -59,10 +70,20 @@ app.post('/login', async (req, res) => {
     } else {
         res.status(422).json('not found');
     }
-})
+});
 
 app.get('/profile', (req, res) => {
-  res.json('user info')
-})
+  const {token} = req.cookies;
+  if (token) {
+      jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+      if(err) throw err;
+      const userDoc = await User.findById(userData.id);
+      res.json(userData);
+    });
+  } else {
+    res.json(null);
+  }
+});
 
-app.listen(4000)
+app.listen(4000);
+
