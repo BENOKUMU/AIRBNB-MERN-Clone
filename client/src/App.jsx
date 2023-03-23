@@ -13,6 +13,10 @@ import { UserContextProvider } from './UserContext';
 axios.defaults.baseURL = "http://127.0.0.1:4000";
 axios.defaults.withCredentials = true;
 
+// axios.defaults.headers = {
+//   Cookie: document.cookie,
+// };
+
 function App() {
 
   return (

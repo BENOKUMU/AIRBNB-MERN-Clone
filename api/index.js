@@ -1,28 +1,35 @@
 const express = require('express');
+
 const cors = require('cors');
 const { default: mongoose } = require('mongoose');
 const UserModel = require('./models/User');
 const User = require('./models/User')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const cookieParser = require('cookie-parser')
+
+const cookieParser = require("cookie-parser");
 
 require('dotenv').config();
 const app = express();
 
 const bcryptSalt = bcrypt.genSaltSync(10)
-const jwtSecret = 'thequickbrownfoxjumpedoverthelazydogs';
+const jwtSecret = 'thequickbrownfoxjumpedoverthelazydogssggusizhxggoqxaja';
 
-app.use(express.json())
+app.use(cookieParser());
 
-app.use(cookieParser())
+app.use(express.json());
+
 
 app.use(
   cors({
     credentials: true,
     origin: ["http://127.0.0.1:5173", "http://localhost:5173"],
+    exposedHeaders: ["set-cookie"],
   })
 );
+
+
+
 
 
 // console.log(process.env.MONGO_URL);
@@ -77,8 +84,8 @@ app.get('/profile', (req, res) => {
   if (token) {
       jwt.verify(token, jwtSecret, {}, async (err, userData) => {
       if(err) throw err;
-      const userDoc = await User.findById(userData.id);
-      res.json(userData);
+      const {name, email, _id} = await User.findById(userData.id);
+      res.json({name, email, _id});
     });
   } else {
     res.json(null);
